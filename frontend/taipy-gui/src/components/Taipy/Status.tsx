@@ -14,6 +14,10 @@
 import React, { MouseEvent, ReactNode, useMemo } from "react";
 import Chip from "@mui/material/Chip";
 import Avatar from "@mui/material/Avatar";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningIcon from "@mui/icons-material/Warning";
+import ErrorIcon from "@mui/icons-material/Error";
+import InfoIcon from "@mui/icons-material/Info";
 
 import { getInitials } from "../../utils";
 import { TaipyBaseProps } from "./utils";
@@ -44,6 +48,25 @@ const status2Color = (status: string): "error" | "info" | "success" | "warning" 
     return "info";
 };
 
+// Function to get the appropriate icon based on the status
+const getStatusIcon = (status: string) => {
+    const color = status2Color(status);
+    const iconProps = { 
+        sx: { fontSize: 20, color: `${color}.main` } // Customize icon size and color
+    };
+
+    switch (status2Color(status)) {
+        case "success":
+            return <CheckCircleIcon {...iconProps} />;
+        case "warning":
+            return <WarningIcon {...iconProps} />;
+        case "error":
+            return <ErrorIcon {...iconProps} />;
+        default:
+            return <InfoIcon {...iconProps} />;
+    }
+};
+
 const chipSx = { alignSelf: "flex-start" };
 
 const Status = (props: StatusProps) => {
@@ -53,8 +76,18 @@ const Status = (props: StatusProps) => {
 
     const chipProps = useMemo(() => {
         const cp: Record<string, unknown> = {};
-        cp.color = status2Color(value.status);
-        cp.avatar = <Avatar sx={{ bgcolor: `${cp.color}.main` }}>{getInitials(value.status)}</Avatar>;
+        const statusColor = status2Color(value.status);
+        cp.color = statusColor;
+        cp.avatar = (
+            <Avatar 
+                sx={{ 
+                    bgcolor: "transparent",
+                    color: `${statusColor}.main`
+                }}
+            >
+                {getStatusIcon(value.status)}
+            </Avatar>
+        );
         if (props.onClose) {
             cp.onDelete = props.onClose;
         }
