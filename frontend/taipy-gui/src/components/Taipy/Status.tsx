@@ -11,7 +11,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import React, { MouseEvent, ReactNode, useMemo } from "react";
+import React, { MouseEvent, ReactNode, useMemo} from "react";
 import Chip from "@mui/material/Chip";
 import Avatar from "@mui/material/Avatar";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -32,6 +32,8 @@ interface StatusProps extends TaipyBaseProps {
     value: StatusType;
     onClose?: (evt: MouseEvent) => void;
     icon?: ReactNode;
+    withIcons?: boolean;
+    content?: string;
 }
 
 const status2Color = (status: string): "error" | "info" | "success" | "warning" => {
@@ -49,45 +51,97 @@ const status2Color = (status: string): "error" | "info" | "success" | "warning" 
 };
 
 // Function to get the appropriate icon based on the status
-const getStatusIcon = (status: string) => {
-    const color = status2Color(status);
-    const iconProps = { 
-        sx: { fontSize: 20, color: `${color}.main` } // Customize icon size and color
-    };
+const GetStatusIcon = (status: string, withIcons?: boolean): ReactNode => {
 
-    switch (status2Color(status)) {
-        case "success":
-            return <CheckCircleIcon {...iconProps} />;
-        case "warning":
-            return <WarningIcon {...iconProps} />;
-        case "error":
-            return <ErrorIcon {...iconProps} />;
-        default:
-            return <InfoIcon {...iconProps} />;
+    const color = status2Color(status);
+    const iconProps = {
+        sx: { fontSize: 20, color: `${color}.main` },
+    };
+    
+    if (withIcons) {
+        switch (status2Color(status)) {
+            case "success":
+                return <CheckCircleIcon {...iconProps} />;
+            case "warning":
+                return <WarningIcon {...iconProps} />;
+            case "error":
+                return <ErrorIcon {...iconProps} />;
+            default:
+                return <InfoIcon {...iconProps} />;
+        }
+    } else {
+        return getInitials(status);
     }
 };
+
+
 
 const chipSx = { alignSelf: "flex-start" };
 
 const Status = (props: StatusProps) => {
     const { value, id } = props;
-
+    const content = props.content;
+    const withIcons = props.withIcons;
     const className = useClassNames(props.libClassName, props.dynamicClassName, props.className);
+
+    console.log(content)
+
+    const isSvgUrl = (content?: string) => {
+            return content?.substring(content?.length - 4).toLowerCase() === ".svg"; // Check if it ends with ".svg"
+    };
+
+    const isInlineSvg = (content?: string) => {
+        return content?.substring(0, 4).toLowerCase() === "<svg"; // Check if the content starts with "<svg"
+    };
 
     const chipProps = useMemo(() => {
         const cp: Record<string, unknown> = {};
         const statusColor = status2Color(value.status);
         cp.color = statusColor;
-        cp.avatar = (
-            <Avatar 
-                sx={{ 
-                    bgcolor: "transparent",
-                    color: `${statusColor}.main`
-                }}
-            >
-                {getStatusIcon(value.status)}
-            </Avatar>
-        );
+       
+        if (isSvgUrl(content)) {
+            cp.avatar = (
+                <Avatar src={content} />
+            );
+        } 
+        
+        else if(content && isInlineSvg(content)){
+            cp.avatar = (
+                <Avatar
+                    sx={{
+                        bgcolor: "transparent"
+                    }}
+                >
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                    dangerouslySetInnerHTML={{ __html: content }} />
+                </Avatar>
+            );
+        }
+
+        else {
+            cp.avatar = (
+                <Avatar
+                    sx={{
+                        bgcolor: withIcons
+                            ? 'transparent' 
+                            : `${statusColor}.main`,  
+                        color: `${statusColor}.contrastText`, 
+                        fontSize: '1rem',
+                        textShadow: '1px 1px 5px black, -1px -1px 5px black' // Adds a shadow for better visibility
+                    }}
+                >
+                    {GetStatusIcon(value.status, withIcons)}
+                </Avatar>
+            );
+        }
+
         if (props.onClose) {
             cp.onDelete = props.onClose;
         }
@@ -95,7 +149,7 @@ const Status = (props: StatusProps) => {
             cp.deleteIcon = props.icon;
         }
         return cp;
-    }, [value.status, props.onClose, props.icon]);
+    }, [value.status, props.onClose, props.icon, withIcons, content]);
 
     return <Chip id={id} variant="outlined" {...chipProps} label={value.message} sx={chipSx} className={className} />;
 };
