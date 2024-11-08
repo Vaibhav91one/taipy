@@ -111,8 +111,6 @@ const StatusList = (props: StatusListProps) => {
     const className = useClassNames(props.libClassName, props.dynamicClassName, props.className);
     const hover = useDynamicProperty(props.hoverText, props.defaultHoverText, undefined);
 
-    console.log(content, props.customIcon)
-
     useEffect(() => {
         let val;
         if (value === undefined) {

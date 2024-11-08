@@ -84,8 +84,6 @@ const Status = (props: StatusProps) => {
     const withIcons = props.withIcons;
     const className = useClassNames(props.libClassName, props.dynamicClassName, props.className);
 
-    console.log(content)
-
     const isSvgUrl = (content?: string) => {
             return content?.substring(content?.length - 4).toLowerCase() === ".svg"; // Check if it ends with ".svg"
     };
