@@ -98,7 +98,7 @@ const StatusList = (props: StatusListProps) => {
     const [multiple, setMultiple] = useState(false);
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const content = useMemo(() => {
-        if (props.customIcon) {
+        if (typeof props.customIcon === 'string') {
             try {
                 return props.customIcon.split(';');
             } catch (e) {

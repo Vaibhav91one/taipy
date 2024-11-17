@@ -547,7 +547,7 @@ class _Factory:
                 ("without_close", PropertyType.boolean, False),
                 ("with_icons", PropertyType.boolean, False),
                 ("hover_text", PropertyType.dynamic_string),
-                ("custom_icon", PropertyType.string), 
+                ("custom_icon", PropertyType.string),
             ]
         ),
         "table": lambda gui, control_type, attrs: _Builder(

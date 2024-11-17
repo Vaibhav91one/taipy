@@ -11,7 +11,7 @@
  * specific language governing permissions and limitations under the License.
  */
 
-import React, { MouseEvent, ReactNode, useMemo} from "react";
+import React, { MouseEvent, ReactNode, useEffect, useMemo, useRef} from "react";
 import Chip from "@mui/material/Chip";
 import Avatar from "@mui/material/Avatar";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -52,45 +52,73 @@ const status2Color = (status: string): "error" | "info" | "success" | "warning" 
 
 // Function to get the appropriate icon based on the status
 const GetStatusIcon = (status: string, withIcons?: boolean): ReactNode => {
-
+    // Use useMemo to memoize the iconProps as well
     const color = status2Color(status);
-    const iconProps = {
-        sx: { fontSize: 20, color: `${color}.main` },
-    };
-    
-    if (withIcons) {
-        switch (status2Color(status)) {
-            case "success":
-                return <CheckCircleIcon {...iconProps} />;
-            case "warning":
-                return <WarningIcon {...iconProps} />;
-            case "error":
-                return <ErrorIcon {...iconProps} />;
-            default:
-                return <InfoIcon {...iconProps} />;
-        }
-    } else {
-        return getInitials(status);
-    }
-};
 
+    // Memoize the iconProps
+    const iconProps = useMemo(() => ({
+        sx: { fontSize: 20, color: `${color}.main` },
+    }), [color]);  // Recalculate iconProps when `color` changes
+
+    return useMemo(() => {
+        if (withIcons) {
+            switch (color) {
+                case "success":
+                    return <CheckCircleIcon {...iconProps} />;
+                case "warning":
+                    return <WarningIcon {...iconProps} />;
+                case "error":
+                    return <ErrorIcon {...iconProps} />;
+                default:
+                    return <InfoIcon {...iconProps} />;
+            }
+        } else {
+            return getInitials(status);
+        }
+    }, [status, withIcons, color, iconProps]); // Memoize based on `status`, `withIcons`, `color`, and `iconProps`
+};
 
 
 const chipSx = { alignSelf: "flex-start" };
 
+const defaultAvatarStyle = {
+    width: '100%',
+    height: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+
+const defaultAvatarSx = {
+    bgcolor: 'transparent'
+};
+
+const baseStyles = {
+    fontSize: '1rem', 
+    textShadow: '1px 1px 4px black, -1px -1px 4px black',
+};
+
+const isSvgUrl = (content?: string) => {
+    return content?.substring(content?.length - 4).toLowerCase() === ".svg"; // Check if it ends with ".svg"
+};
+
+const isInlineSvg = (content?: string) => {
+return content?.substring(0, 4).toLowerCase() === "<svg"; // Check if the content starts with "<svg"
+};
+
 const Status = (props: StatusProps) => {
     const { value, id } = props;
-    const content = props.content;
+    const content = props.content || undefined;
     const withIcons = props.withIcons;
+    const svgRef = useRef<HTMLDivElement>(null);
     const className = useClassNames(props.libClassName, props.dynamicClassName, props.className);
 
-    const isSvgUrl = (content?: string) => {
-            return content?.substring(content?.length - 4).toLowerCase() === ".svg"; // Check if it ends with ".svg"
-    };
+    useEffect(() => {
+        if (content && svgRef.current) {
+            svgRef.current.innerHTML = content;
+        }
+    }, [content]);
 
-    const isInlineSvg = (content?: string) => {
-        return content?.substring(0, 4).toLowerCase() === "<svg"; // Check if the content starts with "<svg"
-    };
 
     const chipProps = useMemo(() => {
         const cp: Record<string, unknown> = {};
@@ -99,26 +127,20 @@ const Status = (props: StatusProps) => {
        
         if (isSvgUrl(content)) {
             cp.avatar = (
-                <Avatar src={content} />
+                <Avatar src={content}  data-testid="Avatar" />
             );
         } 
         
         else if(content && isInlineSvg(content)){
             cp.avatar = (
                 <Avatar
-                    sx={{
-                        bgcolor: "transparent"
-                    }}
+                    sx={defaultAvatarSx}
+                    data-testid="Avatar"
                 >
                     <div
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                    }}
-                    dangerouslySetInnerHTML={{ __html: content }} />
+                      ref={svgRef}
+                      style={defaultAvatarStyle}
+                    />
                 </Avatar>
             );
         }
@@ -131,9 +153,9 @@ const Status = (props: StatusProps) => {
                             ? 'transparent' 
                             : `${statusColor}.main`,  
                         color: `${statusColor}.contrastText`, 
-                        fontSize: '1rem',
-                        textShadow: '1px 1px 5px black, -1px -1px 5px black' // Adds a shadow for better visibility
+                        ...baseStyles
                     }}
+                    data-testid="Avatar"
                 >
                     {GetStatusIcon(value.status, withIcons)}
                 </Avatar>
