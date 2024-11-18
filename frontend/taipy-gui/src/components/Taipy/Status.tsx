@@ -56,11 +56,9 @@ const GetStatusIcon = (status: string, withIcons?: boolean): ReactNode => {
     const color = status2Color(status);
 
     // Memoize the iconProps
-    const iconProps = useMemo(() => ({
-        sx: { fontSize: 20, color: `${color}.main` },
-    }), [color]);  // Recalculate iconProps when `color` changes
-
-    return useMemo(() => {
+    const iconProps = {
+        sx: { fontSize: 20, color: `${color}.main` }}
+        
         if (withIcons) {
             switch (color) {
                 case "success":
@@ -75,7 +73,7 @@ const GetStatusIcon = (status: string, withIcons?: boolean): ReactNode => {
         } else {
             return getInitials(status);
         }
-    }, [status, withIcons, color, iconProps]); // Memoize based on `status`, `withIcons`, `color`, and `iconProps`
+
 };
 
 
